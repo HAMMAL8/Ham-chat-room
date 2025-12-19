@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HAM Global Group Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+  --primary:#075e54;
+  --bg:#e5ddd5;
+}
+
+* {
+  margin:0;
+  box-sizing:border-box;
+  font-family:Arial, Helvetica, sans-serif;
+}
+
+body {
+  background:var(--bg);
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.app {
+  width:95%;
+  height:95vh;
+  background:#fff;
+  border-radius:8px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+header {
+  background:var(--primary);
+  color:#fff;
+  padding:15px;
+  text-align:center;
+  font-size:18px;
+}
+
+.messages {
+  flex:1;
+  padding:15px;
+  overflow-y:auto;
+  background:var(--bg);
+}
+
+.message {
+  background:#fff;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:6px;
+  max-width:80%;
+}
+
+.name {
+  font-weight:bold;
+  font-size:13px;
+  margin-bottom:4px;
+}
+
+.time {
+  font-size:10px;
+  color:#555;
+  text-align:right;
+}
+
+.input {
+  display:flex;
+  padding:10px;
+  background:#eee;
+}
+
+.input input {
+  padding:10px;
+  border:none;
+  border-radius:20px;
+  outline:none;
+}
+
+#name {
+  width:25%;
+  margin-right:8px;
+}
+
+#text {
+  flex:1;
+}
+
+.input button {
+  margin-left:8px;
+  padding:0 18px;
+  border:none;
+  border-radius:20px;
+  background:var(--primary);
+  color:#fff;
+  cursor:pointer;
+}
+
+@media(max-width:600px){
+  #name {width:35%;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+  <header>🌍 HAM Global Group Chat</header>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="input">
+    <input id="name" placeholder="Your name">
+    <input id="text" placeholder="Type a message">
+    <button onclick="send()">Send</button>
+  </div>
+</div>
+
+<script>
+/* 🔥 YOUR FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyD6kso2yrzG2QGRIqyaFO-QVEZy0XAO0LA",
+  authDomain: "ham-group-chat.firebaseapp.com",
+  projectId: "ham-group-chat",
+  storageBucket: "ham-group-chat.firebasestorage.app",
+  messagingSenderId: "610835365540",
+  appId: "1:610835365540:web:63a36a9420c9740e103031",
+  measurementId: "G-6WFYEVD4RY"
+};
+
+/* INIT FIREBASE */
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const chatRef = db.collection("globalChat");
+
+/* REAL-TIME LISTENER */
+chatRef.orderBy("time")
+  .onSnapshot(snapshot => {
+    const box = document.getElementById("messages");
+    box.innerHTML = "";
+    snapshot.forEach(doc => {
+      const m = doc.data();
+      const d = document.createElement("div");
+      d.className = "message";
+      d.innerHTML = `
+        <div class="name">${m.name}</div>
+        <div>${m.text}</div>
+        <div class="time">${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+      `;
+      box.appendChild(d);
+    });
+    box.scrollTop = box.scrollHeight;
+  });
+
+/* SEND MESSAGE */
+function send(){
+  const name = document.getElementById("name").value.trim();
+  const text = document.getElementById("text").value.trim();
+  if(!name || !text) return;
+
+  chatRef.add({
+    name,
+    text,
+    time: Date.now()
+  });
+
+  document.getElementById("text").value = "";
+}
+
+/* ENTER KEY */
+document.getElementById("text").addEventListener("keydown", e => {
+  if(e.key === "Enter") send();
+});
+</script>
+
+</body>
+</html>
